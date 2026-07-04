@@ -1,71 +1,65 @@
 ---
 - hosts: all
+  become: yes
+
   vars:
-      deploy_dir: "/deploy"
-      application_dir: "/service/rest-service"
-      application_jar_name: "rest-service-latest.jar"
-      application_version: "1.0.0"
-      application_group_id: "org.springframework"
-      application_artifact_id: "rest-service"
-      application_repository_url: "http://nexu-dellemc.eastus.cloudapp.azure.com:8081/repository/nexus-dellemc"
+    deploy_dir: "/deploy"
+    app_dir: "/srv/gs-rest-service"
+    jar_name: "rest-service-latest.jar"
+
+    # Local jar (from your CI build machine)
+    local_jar_path: "../../target/devops-demo-0.3.0.jar"
+
+    tools_dir: "/opt/tools"
+
   tasks:
-    - name: Create tools home
+
+    - name: Create tools directory
       file:
         path: "{{ tools_dir }}"
         state: directory
-        mode: 0755
-    - name: Install PIP
-      apt:
-        name: python-pip
-        state: present
-    - name: Install lxml
-      pip:
-        name: lxml
+        mode: '0755'
 
-    - name: Create application home
+    - name: Install required system packages
+      apt:
+        name:
+          - python3-pip
+          - python3-lxml
+          - openjdk-17-jre
+        state: present
+        update_cache: yes
+
+    - name: Create application directory
       file:
         path: "{{ app_dir }}"
         state: directory
-        mode: 0755
+        mode: '0755'
 
-    - name: Remove Old Jar
-      shell:  rm -r /service/rest-service/rest-service-latest.jar
-      become: yes
+    - name: Create deploy directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Remove old jar if exists
+      file:
+        path: "{{ deploy_dir }}/{{ jar_name }}"
+        state: absent
       ignore_errors: true
 
-    - name: stop  application
-      shell: sudo kill $(cat ./bin/shutdown.pid)
+    - name: Stop running application if any
+      shell: pkill -f devops-demo || true
       ignore_errors: true
 
-    - name: Download jar
-      maven_artifact:
-        group_id: "{{ application_group_id }}"
-        artifact_id: "{{ application_artifact_id }}"
-        version: "{{ application_version }}"
-        repository_url: "{{ application_repository_url }}"
-        dest: "{{ deploy_dir }}/{{ application_jar_name }}"
-        validate_certs: no
+    # ✅ FIXED: No Nexus (avoids DNS/network failure)
+    - name: Copy jar to remote server
+      copy:
+        src: "{{ local_jar_path }}"
+        dest: "{{ deploy_dir }}/{{ jar_name }}"
+        mode: '0755'
 
-    - name: Install add-apt-repostory
-      become: yes
-      apt: name=software-properties-common state=latest
-
-    - name: Add Oracle Java Repository
-      become: yes
-      apt_repository: repo='ppa:webupd8team/java'
-
-    - name: Accept Java 8 License
-      become: yes
-      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
-
-    - name: Install Oracle Java 8
-      become: yes
-      apt: name={{item}} state=latest
-      with_items:
-        - oracle-java8-installer
-        - ca-certificates
-        - oracle-java8-set-default
-
-    - name: Start Application
-      shell: nohup  java -jar /srv/gs-rest-service/rest-service-latest.jar </dev/null >/dev/null 2>&1 &
-      become: yes
+    - name: Start application
+      shell: |
+        nohup java -jar {{ deploy_dir }}/{{ jar_name }} > app.log 2>&1 &
+      async: 10
+      poll: 0
