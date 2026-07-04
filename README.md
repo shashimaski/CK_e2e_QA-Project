@@ -475,3 +475,23 @@ output "public_ip_address" {
 ```
 
 
+## Assignment Progress
+
+### Part A
+- Cloned the repository.
+- Configured Git on the Linux VM.
+- Created and pushed the project to my GitHub repository.
+- Repository: https://github.com/shashimaski/CK_e2e_QA-Project
+
+### Part B
+- Installed Java and Maven.
+- Built the project using:
+  ```bash
+  mvn clean package
+  ```
+- Successfully executed all unit tests.
+- Generated the executable JAR:
+  ```
+  target/devops-demo-0.3.0.jar
+  ```
+- Identified that this is a Spring Boot JAR project rather than a JSP/WAR project, so the build was completed using the existing project structure.
