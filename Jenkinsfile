@@ -3,15 +3,19 @@ pipeline {
 
     stages {
 
-        stage('Clean Workspace') {
-            steps {
-                deleteDir()
-            }
-        }
-
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Install Tools') {
+            steps {
+                sh '''
+                    apt-get update || true
+                    apt-get install -y maven curl || true
+                    mvn -version
+                '''
             }
         }
 
@@ -34,11 +38,12 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy (Ansible)') {
             steps {
                 sh '''
+                    apt-get install -y ansible sshpass || true
                     ansible-playbook -i ansible/environments/test/hosts \
-                    ansible/playbooks/deploy.yml --ask-become-pass
+                    ansible/playbooks/deploy.yml
                 '''
             }
         }
