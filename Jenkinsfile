@@ -9,48 +9,38 @@ pipeline {
             }
         }
 
-        stage('Install Tools') {
-            steps {
-                sh '''
-                    apt-get update || true
-                    apt-get install -y maven curl || true
-                    mvn -version
-                '''
-            }
-        }
-
         stage('Build') {
             steps {
-                sh "mvn clean compile"
+                sh 'mvn -v'
+                sh 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh "mvn test"
+                sh 'mvn test'
                 junit '**/target/surefire-reports/TEST-*.xml'
             }
         }
 
         stage('Package') {
             steps {
-                sh "mvn clean package"
+                sh 'mvn clean package'
             }
         }
 
-        stage('Deploy (Ansible)') {
+        stage('Deploy') {
             steps {
                 sh '''
-                    apt-get install -y ansible sshpass || true
                     ansible-playbook -i ansible/environments/test/hosts \
-                    ansible/playbooks/deploy.yml
+                    ansible/playbooks/deploy.yml --ask-become-pass
                 '''
             }
         }
 
         stage('Health Check') {
             steps {
-                sh "curl -f http://130.131.1.141:8080 || true"
+                sh 'curl -f http://130.131.1.141:8080 || true'
             }
         }
     }
