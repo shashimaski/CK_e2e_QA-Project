@@ -1,3 +1,4 @@
+cat > Jenkinsfile << 'EOF'
 pipeline {
     agent any
 
@@ -48,8 +49,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                    ansible-playbook -i ansible/environments/test/hosts \
-                    ansible/playbooks/deploy.yml --extra-vars "ansible_become_pass=YOUR_SUDO_PASSWORD"
+                    ansible-playbook \
+                    -i ansible/environments/test/hosts \
+                    ansible/playbooks/deploy.yml \
+                    --extra-vars "ansible_become_pass=Devops@12345"
                 '''
             }
         }
@@ -61,3 +64,4 @@ pipeline {
         }
     }
 }
+EOF
