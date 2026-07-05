@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        JAVA8_HOME = '/opt/jdk8u422-b05'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -11,21 +15,33 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn -v'
-                sh 'mvn clean compile'
+                sh '''
+                    export JAVA_HOME=$JAVA8_HOME
+                    export PATH=$JAVA_HOME/bin:$PATH
+                    mvn -v
+                    mvn clean compile
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh '''
+                    export JAVA_HOME=$JAVA8_HOME
+                    export PATH=$JAVA_HOME/bin:$PATH
+                    mvn test
+                '''
                 junit '**/target/surefire-reports/TEST-*.xml'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn clean package'
+                sh '''
+                    export JAVA_HOME=$JAVA8_HOME
+                    export PATH=$JAVA_HOME/bin:$PATH
+                    mvn clean package
+                '''
             }
         }
 
