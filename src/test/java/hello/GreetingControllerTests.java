@@ -21,13 +21,13 @@ public class GreetingControllerTests {
 
     @Test
     public void noParamGreetingShouldReturnDefaultMessage() throws Exception {
-        mockMvc.perform(get("/greeting"))
+        mockMvc.perform(get("/sayhi"))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void paramGreetingShouldReturnTailoredMessage() throws Exception {
-        mockMvc.perform(get("/greeting?name=John"))
+        mockMvc.perform(get("/sayhi?name=John"))
                 .andExpect(status().isOk());
     }
 }
