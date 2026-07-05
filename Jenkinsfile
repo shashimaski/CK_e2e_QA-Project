@@ -49,7 +49,7 @@ pipeline {
             steps {
                 sh '''
                     ansible-playbook -i ansible/environments/test/hosts \
-                    ansible/playbooks/deploy.yml --ask-become-pass
+                    ansible/playbooks/deploy.yml --extra-vars "ansible_become_pass=YOUR_SUDO_PASSWORD"
                 '''
             }
         }
